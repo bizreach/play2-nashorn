@@ -5,12 +5,12 @@ import java.io.{FileReader, File}
 import javax.script.{ScriptEngineManager, ScriptContext, SimpleScriptContext, ScriptEngine}
 
 import com.typesafe.config.ConfigRenderOptions
-import play.api.{Logger, Plugin, Application}
+import play.api.{Configuration, Logger, Plugin, Application}
 
 case class RouteConfig(
   key:String,
   commons:Seq[String],
-  templates:Seq[String],
+  templates:Seq[(String, String)],
   scripts:Seq[String],
   configParams: Option[String])
 
@@ -24,8 +24,8 @@ class NashornPlugin(app: Application) extends Plugin {
   trait Nashorn {
     val basePath: String
     val engine: ScriptEngine
-    val renderers: Map[String, File]
-    val commons: Map[String, File]
+    val renderers: Seq[(String, File)]
+    val commons: Seq[(String, File)]
     val routes: Map[String, RouteConfig]
 
     def touch(): Unit = {
@@ -55,9 +55,9 @@ class NashornPlugin(app: Application) extends Plugin {
 //    val engine = new NashornScriptEngineFactory().getScriptEngine
 
 
-    val renderers = configStringMap(s"$root.renderers").map{case (k, v) =>
+    val renderers = configStringSeq(app.configuration, s"$root.renderers").map{case (k, v) =>
       k -> new File(basePath + v)}
-    val commons = configStringMap(s"$root.commons").map{case (k, v) =>
+    val commons = configStringSeq(app.configuration, s"$root.commons").map{case (k, v) =>
       k -> new File(basePath + v)}
     val routes = initRouteConfig(s"$root.routes")
   }
@@ -94,7 +94,7 @@ class NashornPlugin(app: Application) extends Plugin {
       key -> RouteConfig(
         key = key,
         commons = c.getStringSeq(s"$key.commons").getOrElse(Seq()),
-        templates = c.getStringSeq(s"$key.templates").getOrElse(Seq()),
+        templates = configStringSeq(c, s"$key.templates"),
         scripts = c.getStringSeq(s"$key.scripts").getOrElse(Seq()),
         configParams = c.getConfig(s"$key.configParams").map(_.underlying.root().render(ConfigRenderOptions.concise()))
       )
@@ -102,13 +102,27 @@ class NashornPlugin(app: Application) extends Plugin {
   }
 
 
-  protected def configStringMap(key: String):Map[String, String] = {
+  protected def configStringSeq(root: Configuration, key: String):Seq[(String, String)] = {
+    root.getConfigSeq(key) match {
+      case Some(list) =>
+        list.flatMap { conf =>
+          conf.subKeys.headOption.map{ subKey =>
+            subKey -> conf.getString(subKey).getOrElse("not-string")
+          }
+        }
+
+      case None =>
+        Seq()
+    }
+
+  }
+
+  protected def configStringMap(key: String): Map[String, String] =
     app.configuration.getConfig(key).map {
       conf => conf.subKeys.map { fileKey =>
         fileKey -> conf.getString(fileKey).getOrElse("not-found")
       }.toMap
     }.getOrElse(Map())
-  }
 
 
   protected def configString(key: String, default: String): String =

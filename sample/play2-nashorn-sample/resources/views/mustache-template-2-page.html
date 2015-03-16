@@ -1,0 +1,13 @@
+<html>
+  {{>header}}
+<body>
+  {{>body}}
+  <p>part1: {{parts.part1}}</p>
+  <p>part2: {{parts.part2}}</p>
+  <ul>
+    {{#parts}}
+    <li>{{.}}</li>
+    {{/parts}}
+  </ul>
+</body>
+</html>

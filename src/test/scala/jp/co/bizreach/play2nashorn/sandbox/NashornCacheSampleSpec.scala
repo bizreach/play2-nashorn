@@ -78,8 +78,8 @@ object ThreadedClassCacheDemo {
 
   def main(args: Array[String]):Unit = {
     // Get a Nashorn script engine with default options
-    val engine = new NashornScriptEngineFactory().getScriptEngine()
-    val react = new File("src/test/resources/react-with-addons.min.js").toURI().toURL()
+    val engine = new NashornScriptEngineFactory().getScriptEngine
+    val react = new File("src/test/resources/react-with-addons.min.js").toURI.toURL
 
     // Evaluate the script 20 times, using the same script engine but a new thread and global bindings
     // for each iteration. This allows the compiled script to be reused with JDK 8u20 and later.
@@ -97,7 +97,7 @@ object ThreadedClassCacheDemo {
 
         val start = System.currentTimeMillis()
         try {
-          engine.eval(new URLReader(url), context);
+          engine.eval(new URLReader(url), context)
         } catch {
           case e:ScriptException =>
             System.err.println("Error evaluating script: " + e)
@@ -112,7 +112,7 @@ object ThreadedClassCacheDemo {
 object PersistentClassCacheDemo {
 
   def main(args: Array[String]):Unit = {
-    val react = new File("src/test/resources/react-with-addons.min.js").toURI().toURL()
+    val react = new File("src/test/resources/react-with-addons.min.js").toURI.toURL
 
     // Evaluate the script 20 times using the persistent code cache.
     // We create a new script engine on each iteration to disable internal class caching.

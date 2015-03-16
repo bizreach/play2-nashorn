@@ -13,10 +13,10 @@ class ReactTutorialSpec extends FunSpec with Matchers {
 
   describe("React tutorial") {
     it("should run properly") {
-      val engine = new NashornScriptEngineFactory().getScriptEngine()
-      val react = new File("src/test/resources/react-with-addons.js").toURI().toURL()
-      val jsx = new File("src/test/resources/JSXTransformer.js").toURI().toURL()
-      val example = new File("src/test/resources/tutorial/example.js").toURI().toURL()
+      val engine = new NashornScriptEngineFactory().getScriptEngine
+      val react = new File("src/test/resources/react-with-addons.js").toURI.toURL
+      val jsx = new File("src/test/resources/JSXTransformer.js").toURI.toURL
+      val example = new File("src/test/resources/tutorial/example.js").toURI.toURL
 
       val b = engine.createBindings()
       val context = new SimpleScriptContext()

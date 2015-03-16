@@ -1,10 +1,8 @@
 package jp.co.bizreach.play2nashorn
 
-import java.io.File
-import java.net.URL
+import java.io.{FileReader, File}
 import javax.script.{Bindings, SimpleScriptContext}
 
-import jdk.nashorn.api.scripting.URLReader
 import play.api.Logger
 import play.api.Play._
 import play.api.mvc.Request
@@ -40,17 +38,17 @@ object Mustache extends Renderer {
 
       route.commons.foreach{cmn =>
         val cmnUrl = commons(cmn)
-        Logger.debug(s"Evaluating: ${cmnUrl.getURL}")
-        engine.eval(cmnUrl, ctx)
+        Logger.debug(s"Evaluating: ${cmnUrl.getPath}")
+        engine.eval(new FileReader(cmnUrl), ctx)
       }
 
-      Logger.debug(s"Evaluating: ${renderer.getURL}")
-      engine.eval(renderer, ctx)
+      Logger.debug(s"Evaluating: ${renderer.getPath}")
+      engine.eval(new FileReader(renderer), ctx)
 
       route.scripts.foldLeft("") { case (acc, script) =>
-        val scriptUrl = new URLReader(scriptPath(script))
-        Logger.debug(s"Evaluating: ${scriptUrl.getURL}")
-        engine.eval(new URLReader(scriptPath(script)), ctx).asInstanceOf[String]
+        val scriptUrl = scriptPath(script)
+        Logger.debug(s"Evaluating: ${scriptUrl.getPath}")
+        engine.eval(new FileReader(scriptUrl), ctx).asInstanceOf[String]
       }
     }
   }
@@ -95,9 +93,9 @@ trait Renderer {
   protected[play2nashorn] def newBindingsAndContext: (Bindings, SimpleScriptContext) =
     (nashorn.engine.createBindings(), new SimpleScriptContext)
 
-  protected[play2nashorn] def scriptPath(requestPath: String):URL = {
+  protected[play2nashorn] def scriptPath(requestPath: String):File = {
     val path = if(requestPath.endsWith(".js")) requestPath.substring(0, requestPath.length - 3) else requestPath
-    new File(s"src/test/resources/$path.js").toURI.toURL
+    new File(s"${nashorn.basePath}/$path.js")
   }
 
   protected[play2nashorn] def routeConf(key: String): RouteConfig =

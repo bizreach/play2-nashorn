@@ -1,11 +1,10 @@
 package jp.co.bizreach.play2nashorn
 
 
-import java.io.File
-import javax.script.{ScriptContext, SimpleScriptContext, ScriptEngine}
+import java.io.{FileReader, File}
+import javax.script.{ScriptEngineManager, ScriptContext, SimpleScriptContext, ScriptEngine}
 
 import com.typesafe.config.ConfigRenderOptions
-import jdk.nashorn.api.scripting.{URLReader, NashornScriptEngineFactory}
 import play.api.{Logger, Plugin, Application}
 
 case class RouteConfig(
@@ -25,21 +24,21 @@ class NashornPlugin(app: Application) extends Plugin {
   trait Nashorn {
     val basePath: String
     val engine: ScriptEngine
-    val renderers: Map[String, URLReader]
-    val commons: Map[String, URLReader]
+    val renderers: Map[String, File]
+    val commons: Map[String, File]
     val routes: Map[String, RouteConfig]
 
     def touch(): Unit = {
       val b = engine.createBindings()
       val context = new SimpleScriptContext()
       context.setBindings(b, ScriptContext.ENGINE_SCOPE)
-      renderers.map { case (key, urlReader) =>
-        Logger.debug(s"Initialize renderer: $key -> ${urlReader.getURL}")
-        engine.eval(urlReader, context)
+      renderers.map { case (key, reader) =>
+        Logger.debug(s"Initialize renderer: $key -> ${reader.toString}")
+        engine.eval(new FileReader(reader), context)
       }
-      commons.map { case (key, urlReader) =>
-        Logger.debug(s"Initialize common file: $key -> ${urlReader.getURL}")
-        engine.eval(urlReader, context)
+      commons.map { case (key, reader) =>
+        Logger.debug(s"Initialize common file: $key -> ${reader.toString}")
+        engine.eval(new FileReader(reader), context)
       }
     }
   }
@@ -47,11 +46,19 @@ class NashornPlugin(app: Application) extends Plugin {
 
   lazy val nashorn = new Nashorn {
     val basePath = configString(s"$root.basePath", "/public")
-    val engine = new NashornScriptEngineFactory().getScriptEngine
+
+    // Pass 'null' to force the correct class loader. Without passing any param,
+    // the "nashorn" JavaScript engine is not found by the `ScriptEngineManager`.
+    //
+    // See: https://github.com/playframework/playframework/issues/2532
+    val engine = new ScriptEngineManager(null).getEngineByName("nashorn")
+//    val engine = new NashornScriptEngineFactory().getScriptEngine
+
+
     val renderers = configStringMap(s"$root.renderers").map{case (k, v) =>
-      k -> new URLReader(new File(basePath + v).toURI.toURL)}
+      k -> new File(basePath + v)}
     val commons = configStringMap(s"$root.commons").map{case (k, v) =>
-      k -> new URLReader(new File(basePath + v).toURI.toURL)}
+      k -> new File(basePath + v)}
     val routes = initRouteConfig(s"$root.routes")
   }
 
@@ -59,7 +66,19 @@ class NashornPlugin(app: Application) extends Plugin {
   override def onStart(): Unit = {
     super.onStart()
     Logger.info("Initialize Nashorn plugin ...")
-    nashorn.touch()
+    try {
+      nashorn.touch()
+
+    } catch {
+      case ex:NoClassDefFoundError =>
+        if (ex.getMessage.contains("NashornScriptEngineFactory")) {
+          Logger.error("NashornScriptEngineFactory was not found.")
+          Logger.error("The server needs JDK 8, but it's working on:")
+          Logger.error(System.getProperties.get("java.runtime.name").toString)
+          Logger.error(System.getProperties.get("java.runtime.version").toString)
+        }
+        throw ex
+    }
     Logger.info("Nashorn initialization has completed.")
   }
 

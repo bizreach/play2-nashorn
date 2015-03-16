@@ -6,7 +6,7 @@ target
 tmp
 .history
 dist
-/.idea
+.idea
 /.metadata
 .project
 /*.iml
@@ -18,4 +18,5 @@ dist
 /.settings
 node_modules
 atlassian-ide-plugin.xml
-.log
+/log
+/*.log

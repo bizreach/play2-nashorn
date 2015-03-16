@@ -1,4 +1,4 @@
-package jp.co.bizreach.play2nashorn
+package jp.co.bizreach.play2nashorn.sandbox
 
 import java.io.File
 import javax.script.{ScriptContext, SimpleScriptContext}

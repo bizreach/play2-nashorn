@@ -1,10 +1,10 @@
-package jp.co.bizreach.play2nashorn
+package jp.co.bizreach.play2nashorn.sandbox
 
 import java.io.File
 import javax.script.{ScriptContext, SimpleScriptContext}
 
-import jdk.nashorn.api.scripting.{URLReader, NashornScriptEngineFactory}
-import org.scalatest.{Matchers, FunSpec}
+import jdk.nashorn.api.scripting.{NashornScriptEngineFactory, URLReader}
+import org.scalatest.{FunSpec, Matchers}
 
 /**
  * Created by satoshi.kobayashi on 3/8/15.

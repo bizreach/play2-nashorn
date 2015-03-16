@@ -1,15 +1,13 @@
-# TODO
-
-# 留意事項
-
-- `sbt`は、`bin/sbt`
+Play2 Framework plugin to render HTML with Nashorn JavaScript engine
 
 # Notes
 
+Renderer:
 - React 0.13.0
 - Dust 2.6.0
 - Mustache 1.1.0
 
+Commons:
 - Lodash 3.5.0
 
 # Reference

@@ -17,8 +17,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 object Mustache extends Renderer {
 
-  lazy val engine = nashorn.engine
   lazy val renderer = nashorn.renderers("mustache")
+  lazy val engine = nashorn.engine
   lazy val commons = nashorn.commons
 
 
@@ -57,7 +57,7 @@ object Mustache extends Renderer {
 
 
   def sync(routeKey: String, json: String)(implicit req: Request[_]): String = {
-    Await.result(apply(routeKey, json), 60.seconds)
+    Await.result(apply(routeKey, json), 60.seconds) // TODO make timeout configurable
   }
   
 
@@ -66,9 +66,6 @@ object Mustache extends Renderer {
 
     ???
   }
-
-
-
 }
 
 
@@ -76,13 +73,17 @@ object Dust extends Renderer {
 
   lazy val renderer = nashorn.renderers("dust")
 
-  def apply(path: String, json: Any): Future[String] = {
-    renderer //...
-
-    ???
-  }
+  // TODO implement Dust object
 
 
+}
+
+
+object React extends Renderer {
+
+  lazy val renderer = nashorn.renderers("mustache")
+
+  // TODO implement React object
 }
 
 

@@ -1,4 +1,4 @@
-package jp.co.bizreach.play2nashorn
+package jp.co.bizreach.play2nashorn.sandbox
 
 import java.io.File
 import javax.script.{ScriptContext, SimpleScriptContext}
@@ -7,8 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import jdk.nashorn.api.scripting.{NashornScriptEngineFactory, URLReader}
 import org.scalatest.{FunSpec, Matchers}
 
-import scala.concurrent.Promise
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Promise
 
 /**
  * Created by satoshi.kobayashi on 3/8/15.

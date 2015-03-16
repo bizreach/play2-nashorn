@@ -65,7 +65,7 @@ class NashornPlugin(app: Application) extends Plugin {
 
 
   override def onStop(): Unit = {
-    Logger.info("Good bye !")
+    Logger.info("Bye !")
     super.onStop()
   }
 

@@ -18,3 +18,4 @@ dist
 /.settings
 node_modules
 atlassian-ide-plugin.xml
+.log

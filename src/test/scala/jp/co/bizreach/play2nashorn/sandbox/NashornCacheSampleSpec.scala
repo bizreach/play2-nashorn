@@ -1,11 +1,11 @@
-package jp.co.bizreach.play2nashorn
+package jp.co.bizreach.play2nashorn.sandbox
 
-import org.scalatest.{FunSpec, Matchers}
-import javax.script._
-import java.io.{FileReader, File}
+import java.io.File
 import java.net.URL
-import jdk.nashorn.api.scripting.NashornScriptEngineFactory
-import jdk.nashorn.api.scripting.URLReader
+import javax.script._
+
+import jdk.nashorn.api.scripting.{NashornScriptEngineFactory, URLReader}
+import org.scalatest.{FunSpec, Matchers}
 
 class NashornCacheSampleSpec extends FunSpec with Matchers {
 

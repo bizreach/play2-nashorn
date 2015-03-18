@@ -1,6 +1,12 @@
 Play2 Framework plugin to render HTML with Nashorn JavaScript engine
 
+
+
 # Notes
+
+Scala 2.10 is NOT supported anymore.
+
+Java 8 is needed to run.
 
 Renderer:
 - React 0.13.0

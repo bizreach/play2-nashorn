@@ -1,11 +1,13 @@
 package jp.co.bizreach.play2nashorn
 
 
-import java.io.{FileReader, File}
+import java.io._
 import javax.script.{ScriptEngineManager, ScriptContext, SimpleScriptContext, ScriptEngine}
 
 import com.typesafe.config.ConfigRenderOptions
-import play.api.{Configuration, Logger, Plugin, Application}
+import play.api._
+
+import scala.io.Source
 
 case class RouteConfig(
   key:String,
@@ -21,44 +23,19 @@ class NashornPlugin(app: Application) extends Plugin {
   private val root = "play2nashorn"
 
 
-  trait Nashorn {
-    val basePath: String
-    val engine: ScriptEngine
-    val renderers: Seq[(String, File)]
-    val commons: Seq[(String, File)]
-    val routes: Map[String, RouteConfig]
-
-    def touch(): Unit = {
-      val b = engine.createBindings()
-      val context = new SimpleScriptContext()
-      context.setBindings(b, ScriptContext.ENGINE_SCOPE)
-      renderers.map { case (key, reader) =>
-        Logger.debug(s"Initialize renderer: $key -> ${reader.toString}")
-        engine.eval(new FileReader(reader), context)
-      }
-      commons.map { case (key, reader) =>
-        Logger.debug(s"Initialize common file: $key -> ${reader.toString}")
-        engine.eval(new FileReader(reader), context)
-      }
-    }
-  }
-
-
-  lazy val nashorn = new Nashorn {
-    val basePath = configString(s"$root.basePath", "/public")
-
+  lazy val nashorn = new NashornConfig {
     // Pass 'null' to force the correct class loader. Without passing any param,
     // the "nashorn" JavaScript engine is not found by the `ScriptEngineManager`.
     //
     // See: https://github.com/playframework/playframework/issues/2532
     val engine = new ScriptEngineManager(null).getEngineByName("nashorn")
-//    val engine = new NashornScriptEngineFactory().getScriptEngine
+    //    val engine = new NashornScriptEngineFactory().getScriptEngine
 
+    val basePath = configString(s"$root.basePath", "/public")
+    val readClassPath = configBoolean(s"$root.readClassPath", Play.isProd(Play.current))
 
-    val renderers = configStringSeq(app.configuration, s"$root.renderers").map{case (k, v) =>
-      k -> new File(basePath + v)}
-    val commons = configStringSeq(app.configuration, s"$root.commons").map{case (k, v) =>
-      k -> new File(basePath + v)}
+    val renderers = configStringSeq(app.configuration, s"$root.renderers")
+    val commons = configStringSeq(app.configuration, s"$root.commons")
     val routes = initRouteConfig(s"$root.routes")
   }
 
@@ -68,6 +45,12 @@ class NashornPlugin(app: Application) extends Plugin {
     Logger.info("Initialize Nashorn plugin ...")
     try {
       nashorn.touch()
+
+      Logger.debug(s"play2-nashorn: basePath: ${nashorn.basePath}")
+      Logger.debug(s"play2-nashorn: readClassPath: ${nashorn.readClassPath}")
+      Logger.debug(s"play2-nashorn: renderers: ${nashorn.renderers}")
+      Logger.debug(s"play2-nashorn: commons: ${nashorn.commons}")
+      Logger.debug(s"play2-nashorn: routes: ${nashorn.routes}")
 
     } catch {
       case ex:NoClassDefFoundError =>
@@ -84,7 +67,7 @@ class NashornPlugin(app: Application) extends Plugin {
 
 
   override def onStop(): Unit = {
-    Logger.info("Bye !")
+    Logger.info("play2-nashorn is shutting down, Bye !")
     super.onStop()
   }
 
@@ -127,6 +110,57 @@ class NashornPlugin(app: Application) extends Plugin {
 
   protected def configString(key: String, default: String): String =
     app.configuration.getString(key).getOrElse(default)
+
+
+  protected def configBoolean(key: String, default: Boolean): Boolean =
+    app.configuration.getBoolean(key).getOrElse(default)
 }
 
 
+trait NashornConfig {
+  val engine: ScriptEngine
+  val basePath: String
+  val readClassPath: Boolean
+  val renderers: Seq[(String, String)]
+  val commons: Seq[(String, String)]
+  val routes: Map[String, RouteConfig]
+
+  def touch(): Unit = {
+    val b = engine.createBindings()
+    val context = new SimpleScriptContext()
+    context.setBindings(b, ScriptContext.ENGINE_SCOPE)
+    renderers.map { case (key, reader) =>
+      Logger.debug(s"Initialize renderer: $key -> ${reader.toString}")
+      engine.eval(readerOf(reader), context)
+    }
+    commons.map { case (key, reader) =>
+      Logger.debug(s"Initialize common file: $key -> ${reader.toString}")
+      engine.eval(readerOf(reader), context)
+    }
+  }
+
+
+  def readerOf(path: String): Reader =
+    if (readClassPath) {
+      if (this.getClass.getClassLoader.getResourceAsStream(s"$basePath$path") != null)
+        new BufferedReader(new InputStreamReader(this.getClass.getClassLoader.getResourceAsStream(s"$basePath$path")))
+      else
+        throw new RuntimeException(s"File: $basePath$path was not found in the classpath")
+    }
+    else
+      new FileReader(new File(s"$basePath$path"))
+
+
+  def exists(path: String): Boolean =
+    if (readClassPath)
+      this.getClass.getClassLoader.getResourceAsStream(s"$basePath$path") != null
+    else
+      new File(s"$basePath$path").exists()
+
+
+  def readLines(path: String): Iterator[String] =
+    if (readClassPath)
+      Source.fromInputStream(this.getClass.getClassLoader.getResourceAsStream(s"$basePath$path")).getLines()
+    else
+      Source.fromFile(s"$basePath$path").getLines()
+}

@@ -2,7 +2,7 @@
 // var res = {...}; // JSON data
 // var writer = new TemplateWriter()._2
 
-var ResponseReceiver = Java.type('jp.co.bizreach.play2nashorn.ResponseReceiver');
+var ResponseReceiver = Java.type('jp.co.bizreach.play2nashorn.sandbox.ResponseReceiver');
 print(ResponseReceiver.echo('Hello Echo'));
 
 print(res2.toString());

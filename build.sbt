@@ -7,8 +7,6 @@ version := "0.1-SNAPSHOT"
 
 scalaVersion := "2.11.6"
 
-crossScalaVersions := Seq("2.10.4", "2.11.6")
-
 // The minimum compiler version is 1.8 since it requires Nashorn
 javacOptions ++= Seq("-source", "1.8")
 

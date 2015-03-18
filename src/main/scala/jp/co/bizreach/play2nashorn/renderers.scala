@@ -1,6 +1,6 @@
 package jp.co.bizreach.play2nashorn
 
-import java.io.{FileReader, File}
+import java.io.{Reader, FileReader, File}
 import javax.script.{Bindings, SimpleScriptContext}
 
 import play.api.Logger
@@ -44,31 +44,31 @@ object Mustache extends Renderer {
       engine.eval(res, ctx)
 
       route.templates.foreach{ case (tplKey, tplPath) =>
-        if (new File(basePath + tplPath).exists()) {
-          val script = s"var $tplKey = ${Source.fromFile(basePath + tplPath)
-            .getLines().map(_.replace("'", "\\'")).mkString("'", "' + \n'", "';")}"
+        if (nashorn.exists(tplPath)) {
+          val script = s"var $tplKey = ${nashorn.readLines(tplPath)
+            .map(_.replace("'", "\\'")).mkString("'", "' + \n'", "';")}"
           Logger.debug(s"Evaluating: $tplKey")
           engine.eval(script, ctx)
         } else
-          Logger.warn(s"Template file: $tplKey($basePath$tplPath) was not found")
+          Logger.warn(s"Template file: $tplKey($tplPath) was not found")
       }
 
       route.commons.foreach{ cmn =>
         getCommons(cmn).map { cmnUrl =>
-          Logger.debug(s"Evaluating: ${cmnUrl.getPath}")
-          engine.eval(new FileReader(cmnUrl), ctx)
+          Logger.debug(s"Evaluating: $cmnUrl")
+          engine.eval(readerOf(cmnUrl), ctx)
         }.getOrElse{
           Logger.warn(s"Common file: $cmn was not found")
         }
       }
 
-      Logger.debug(s"Evaluating: ${renderer.getPath}")
-      engine.eval(new FileReader(renderer), ctx)
+      Logger.debug(s"Evaluating: $renderer")
+      engine.eval(readerOf(renderer), ctx)
 
       route.scripts.foldLeft("") { case (acc, script) =>
         val scriptUrl = scriptPath(script)
-        Logger.debug(s"Evaluating: ${scriptUrl.getPath}")
-        engine.eval(new FileReader(scriptUrl), ctx).asInstanceOf[String]
+        Logger.debug(s"Evaluating: $scriptUrl")
+        engine.eval(readerOf(scriptUrl), ctx).asInstanceOf[String]
       }
     }
   }
@@ -98,17 +98,17 @@ object React extends Renderer {
 trait Renderer {
   lazy val engine = nashorn.engine
   lazy val commons = nashorn.commons
-  lazy val basePath = nashorn.basePath
+
 
   protected[play2nashorn] lazy val nashorn = current.plugin[NashornPlugin].map(_.nashorn)
     .getOrElse(throw new IllegalStateException("NashornPlugin is not installed"))
 
 
-  protected[play2nashorn] def getRenderer(key: String):File  =
+  protected[play2nashorn] def getRenderer(key: String):String  =
     nashorn.renderers.find(_._1 == key).get._2
 
 
-  protected[play2nashorn] def getCommons(key: String):Option[File]  =
+  protected[play2nashorn] def getCommons(key: String):Option[String]  =
     nashorn.commons.find(_._1 == key).map(_._2)
 
 
@@ -116,12 +116,16 @@ trait Renderer {
     (nashorn.engine.createBindings(), new SimpleScriptContext)
 
 
-  protected[play2nashorn] def scriptPath(requestPath: String):File = {
+  protected[play2nashorn] def scriptPath(requestPath: String):String = {
     val path = if(requestPath.endsWith(".js")) requestPath.substring(0, requestPath.length - 3) else requestPath
-    new File(s"${nashorn.basePath}/$path.js")
+    s"$path.js"
   }
 
 
   protected[play2nashorn] def routeConf(key: String): RouteConfig =
     nashorn.routes(key)
+
+  protected[play2nashorn] def readerOf(path: String): Reader =
+    nashorn.readerOf(path)
+
 }

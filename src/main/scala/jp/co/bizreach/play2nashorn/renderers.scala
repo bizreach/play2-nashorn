@@ -5,12 +5,11 @@ import javax.script.{Bindings, SimpleScriptContext}
 
 import play.api.Logger
 import play.api.Play._
-import play.api.mvc.Request
+import play.api.mvc.{AnyContent, Request}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.io.Source
 
 
 object Mustache extends Renderer {
@@ -44,13 +43,14 @@ object Mustache extends Renderer {
       engine.eval(res, ctx)
 
       route.templates.foreach{ case (tplKey, tplPath) =>
-        if (nashorn.exists(tplPath)) {
-          val script = s"var $tplKey = ${nashorn.readLines(tplPath)
+        val resolvedPath = resolveTemplate(req, tplPath)
+        if (nashorn.exists(resolvedPath)) {
+          val script = s"var $tplKey = ${nashorn.readLines(resolvedPath)
             .map(_.replace("'", "\\'")).mkString("'", "' + \n'", "';")}"
           Logger.debug(s"Evaluating: $tplKey")
           engine.eval(script, ctx)
         } else
-          Logger.warn(s"Template file: $tplKey($tplPath) was not found")
+          Logger.warn(s"Template file: $tplKey($resolvedPath) was not found")
       }
 
       route.commons.foreach{ cmn =>
@@ -125,7 +125,13 @@ trait Renderer {
   protected[play2nashorn] def routeConf(key: String): RouteConfig =
     nashorn.routes(key)
 
+
   protected[play2nashorn] def readerOf(path: String): Reader =
     nashorn.readerOf(path)
 
+
+  protected[play2nashorn] def resolveTemplate(req: Request[_], path: String): String =
+    nashorn.templateResolvers.foldLeft(path){ case (out, resolver) =>
+      resolver.resolve(req, out)
+    }
 }

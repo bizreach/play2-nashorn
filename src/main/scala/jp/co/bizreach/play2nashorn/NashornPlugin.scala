@@ -37,6 +37,8 @@ class NashornPlugin(app: Application) extends Plugin {
     val renderers = configStringSeq(app.configuration, s"$root.renderers")
     val commons = configStringSeq(app.configuration, s"$root.commons")
     val routes = initRouteConfig(s"$root.routes")
+    val templateResolvers = configStringSeq(s"$root.templateResolvers")
+      .map(_.map(loadClass[TemplateResolver])).getOrElse(Seq(new DeviceAwareTemplateResolver))
   }
 
 
@@ -114,6 +116,16 @@ class NashornPlugin(app: Application) extends Plugin {
 
   protected def configBoolean(key: String, default: Boolean): Boolean =
     app.configuration.getBoolean(key).getOrElse(default)
+
+
+  protected def configStringSeq(key: String): Option[Seq[String]] =
+    app.configuration.getStringSeq(key)
+
+
+  private def loadClass[T](clazz: String): T = {
+    Logger.debug(s"Loading $clazz")
+    app.classloader.loadClass(clazz).newInstance().asInstanceOf[T]
+  }
 }
 
 
@@ -124,6 +136,7 @@ trait NashornConfig {
   val renderers: Seq[(String, String)]
   val commons: Seq[(String, String)]
   val routes: Map[String, RouteConfig]
+  val templateResolvers: Seq[TemplateResolver]
 
   def touch(): Unit = {
     val b = engine.createBindings()

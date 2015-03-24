@@ -41,4 +41,11 @@ object Application extends Controller {
     result.map{ html => Ok(HtmlFormat.raw(html)) }
   }
 
+
+  /**
+   * Prepare 2 templates for Desktop and mobile
+   */
+  def mustache3 = Action.async { implicit req =>
+    Mustache("mustache-3").map{ html => Ok(HtmlFormat.raw(html)) }
+  }
 }

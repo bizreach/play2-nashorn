@@ -6,6 +6,7 @@ import javax.script.{ScriptContext, Bindings, SimpleScriptContext}
 import play.api.Logger
 import play.api.Play._
 import play.api.mvc.{AnyContent, Request}
+import play.twirl.api.{Html, HtmlFormat}
 
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration._
@@ -17,20 +18,20 @@ object Mustache extends Renderer {
   lazy val renderer = getRenderer("mustache")
 
 
-  def apply(routeKey: String, jsonString: String, variables: Seq[(String, AnyRef)] = Seq())(implicit req: Request[_]): Future[String] =
+  def apply(routeKey: String, jsonString: String, variables: Seq[(String, AnyRef)] = Seq())(implicit req: Request[_]): Future[Html] =
     apply(routeKey, Some(jsonString), variables)
 
-  def apply(routeKey: String)(implicit req: Request[_]): Future[String] =
+  def apply(routeKey: String)(implicit req: Request[_]): Future[Html] =
     apply(routeKey, None, Seq())
 
-  def sync(routeKey: String, jsonString: String, variables: Seq[(String, AnyRef)] = Seq())(implicit req: Request[_]): String =
+  def sync(routeKey: String, jsonString: String, variables: Seq[(String, AnyRef)] = Seq())(implicit req: Request[_]): Html =
     Await.result(apply(routeKey, Some(jsonString), variables), 60.seconds) // TODO make timeout configurable
 
-  def sync(routeKey: String)(implicit req: Request[_]): String =
+  def sync(routeKey: String)(implicit req: Request[_]): Html =
     Await.result(apply(routeKey, None, Seq()), 60.seconds) // TODO make timeout configurable
 
 
-  private def apply(routeKey: String, jsonString: Option[String], variables: Seq[(String, AnyRef)])(implicit req: Request[_]): Future[String] = {
+  private def apply(routeKey: String, jsonString: Option[String], variables: Seq[(String, AnyRef)])(implicit req: Request[_]): Future[Html] = {
 
     val route = routeConf(routeKey)
     val (bind, ctx) = newBindingsAndContext
@@ -70,11 +71,13 @@ object Mustache extends Renderer {
       Logger.debug(s"Evaluating: $renderer")
       engine.eval(readerOf(renderer), ctx)
 
-      route.scripts.foldLeft("") { case (acc, script) =>
+      val htmlText = route.scripts.foldLeft("") { case (acc, script) =>
         val scriptUrl = scriptPath(script)
         Logger.debug(s"Evaluating: $scriptUrl")
         engine.eval(readerOf(scriptUrl), ctx).asInstanceOf[String]
       }
+
+      HtmlFormat.raw(htmlText)
     }
   }
 

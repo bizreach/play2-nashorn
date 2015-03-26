@@ -4,6 +4,7 @@ import org.scalatest.{Matchers, FunSpec}
 import play.api.Logger
 import play.api.test.FakeRequest
 import play.test.Helpers
+import play.twirl.api.HtmlFormat
 
 
 class PluginBootSpec extends FunSpec with Matchers with FakePlayHelper {
@@ -19,10 +20,10 @@ class PluginBootSpec extends FunSpec with Matchers with FakePlayHelper {
       runApp(PlayApp()) { app =>
         implicit val request = FakeRequest(Helpers.GET, "/templates/mustache/mustache-template-1")
 
-        val expected = "<h1>Hello, Mustache !</h1>"
+        val expected = HtmlFormat.raw("<h1>Hello, Mustache !</h1>")
         val response = Mustache.sync("mustache-template-1", """{"key1":"value1","key2":12345}""")
 
-        assert(expected === response)
+        assert(expected.body === response.body)
       }
     }
   }

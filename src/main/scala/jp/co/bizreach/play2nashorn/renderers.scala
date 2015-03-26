@@ -1,7 +1,7 @@
 package jp.co.bizreach.play2nashorn
 
 import java.io.{Reader, FileReader, File}
-import javax.script.{Bindings, SimpleScriptContext}
+import javax.script.{ScriptContext, Bindings, SimpleScriptContext}
 
 import play.api.Logger
 import play.api.Play._
@@ -17,20 +17,20 @@ object Mustache extends Renderer {
   lazy val renderer = getRenderer("mustache")
 
 
-  def apply(routeKey: String, jsonString: String)(implicit req: Request[_]): Future[String] =
-    apply(routeKey, Some(jsonString))
+  def apply(routeKey: String, jsonString: String, variables: Seq[(String, AnyRef)] = Seq())(implicit req: Request[_]): Future[String] =
+    apply(routeKey, Some(jsonString), variables)
 
   def apply(routeKey: String)(implicit req: Request[_]): Future[String] =
-    apply(routeKey, None)
+    apply(routeKey, None, Seq())
 
-  def sync(routeKey: String, jsonString: String)(implicit req: Request[_]): String =
-    Await.result(apply(routeKey, Some(jsonString)), 60.seconds) // TODO make timeout configurable
+  def sync(routeKey: String, jsonString: String, variables: Seq[(String, AnyRef)] = Seq())(implicit req: Request[_]): String =
+    Await.result(apply(routeKey, Some(jsonString), variables), 60.seconds) // TODO make timeout configurable
 
   def sync(routeKey: String)(implicit req: Request[_]): String =
-    Await.result(apply(routeKey, None), 60.seconds) // TODO make timeout configurable
+    Await.result(apply(routeKey, None, Seq()), 60.seconds) // TODO make timeout configurable
 
 
-  private def apply(routeKey: String, jsonString: Option[String])(implicit req: Request[_]): Future[String] = {
+  private def apply(routeKey: String, jsonString: Option[String], variables: Seq[(String, AnyRef)])(implicit req: Request[_]): Future[String] = {
 
     val route = routeConf(routeKey)
     val (bind, ctx) = newBindingsAndContext
@@ -41,6 +41,11 @@ object Mustache extends Renderer {
       val res = s"var res = ${jsonString.getOrElse("{}")};"
       Logger.debug(res)
       engine.eval(res, ctx)
+
+      variables.foreach { case (k, v) =>
+        Logger.debug(s"Bind $k -> ${v.getClass.getCanonicalName}")
+        bind.put(k ,v)
+      }
 
       route.templates.foreach{ case (tplKey, tplPath) =>
         val resolvedPath = resolveTemplate(req, tplPath)
@@ -112,8 +117,13 @@ trait Renderer {
     nashorn.commons.find(_._1 == key).map(_._2)
 
 
-  protected[play2nashorn] def newBindingsAndContext: (Bindings, SimpleScriptContext) =
-    (nashorn.engine.createBindings(), new SimpleScriptContext)
+  protected[play2nashorn] def newBindingsAndContext: (Bindings, SimpleScriptContext) = {
+    val binding = nashorn.engine.createBindings()
+    val context = new SimpleScriptContext
+    context.setBindings(binding, ScriptContext.GLOBAL_SCOPE)
+    (binding, context)
+  }
+
 
 
   protected[play2nashorn] def scriptPath(requestPath: String):String = {

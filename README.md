@@ -1,6 +1,10 @@
 Play2 Framework plugin to render HTML with Nashorn JavaScript engine
 
+# TODO
 
+- Implement Dust and React
+- Catch errors and return properly
+- Performance optimization
 
 # Notes
 

@@ -175,5 +175,5 @@ trait NashornConfig {
     if (readClassPath)
       Source.fromInputStream(this.getClass.getClassLoader.getResourceAsStream(s"$basePath$path")).getLines()
     else
-      Source.fromFile(s"$basePath$path").getLines()
+      Source.fromFile(s"$basePath$path", "UTF-8").getLines()
 }

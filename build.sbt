@@ -3,7 +3,7 @@ name := "play2-nashorn"
 
 organization := "jp.co.bizreach"
 
-version := "0.1-SNAPSHOT"
+version := "0.1.0"
 
 scalaVersion := "2.11.6"
 

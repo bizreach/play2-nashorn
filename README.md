@@ -1,5 +1,24 @@
 Play2 Framework plugin to render HTML with Nashorn JavaScript engine
 
+# Dependency by version
+
+## Play 2.4
+
+```scala
+libraryDependencies += Seq(
+  "jp.co.bizreach" %% "play2-nashorn" % "0.2.0"
+)
+```
+  
+## Play 2.3
+
+```scala
+libraryDependencies += Seq(
+  "jp.co.bizreach" %% "play2-nashorn" % "0.1.0"
+)
+```
+
+
 # TODO
 
 - Implement Dust and React

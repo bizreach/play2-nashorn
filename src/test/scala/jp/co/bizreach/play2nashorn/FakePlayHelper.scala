@@ -12,15 +12,15 @@ import scala.collection.JavaConverters._
 trait FakePlayHelper {
 
   def PlayApp(configs:(String, Any)*) = {
-    val configFromFile = ConfigFactory.parseFile(
-      new File(this.getClass.getResource("/conf/application.conf").toURI))
-      .entrySet.asScala.map(entry => entry.getKey -> entry.getValue.render(ConfigRenderOptions.concise())).toMap
+//    val configFromFile = ConfigFactory.parseFile(
+//      new File(this.getClass.getResource("/conf/application.conf").toURI))
+//      .entrySet.asScala.map(entry => entry.getKey -> entry.getValue.render(ConfigRenderOptions.concise())).toMap
 
     FakeApplication(
       path = new File(this.getClass.getResource("/").toURI),
-      additionalPlugins = Seq(
-        "jp.co.bizreach.play2nashorn.NashornPlugin"
-      ),
+//      additionalPlugins = Seq(
+//        "jp.co.bizreach.play2nashorn.NashornPlugin"
+//      ),
       additionalConfiguration = //configFromFile ++
         configs.toSet.toMap
         //+ ("play2stub.view-root" -> "/views")

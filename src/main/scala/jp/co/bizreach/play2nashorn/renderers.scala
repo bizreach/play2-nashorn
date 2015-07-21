@@ -1,7 +1,7 @@
 package jp.co.bizreach.play2nashorn
 
 import java.io.Reader
-import javax.script.{ScriptContext, Bindings, SimpleScriptContext}
+import javax.script.{ScriptEngine, ScriptContext, Bindings, SimpleScriptContext}
 
 import play.api.Logger
 import play.api.Play._
@@ -125,8 +125,21 @@ trait SyncRenderer extends Renderer {
 
 
 trait Renderer {
+  private[this] var _config: Option[NashornConfig] = None
+
   lazy val engine = nashorn.engine
   lazy val commons = nashorn.commons
+
+
+  protected[play2nashorn] def injectConfig(config: NashornConfig): Unit = {
+    this._config.foreach{ _ => Logger.warn("")}
+    this._config = Some(config)
+  }
+
+  protected[play2nashorn] def nashorn: NashornConfig = {
+    _config.getOrElse(throw new IllegalStateException("HandlebarsPlugin is not installed"))
+  }
+
 
   def renderer: String
 
@@ -198,10 +211,6 @@ trait Renderer {
     engine.eval(readerOf(renderer), ctx)
 
   }
-
-
-  protected[play2nashorn] lazy val nashorn = current.plugin[NashornPlugin].map(_.nashorn)
-    .getOrElse(throw new IllegalStateException("NashornPlugin is not installed"))
 
 
   protected[play2nashorn] def getRenderer(key: String):String  =

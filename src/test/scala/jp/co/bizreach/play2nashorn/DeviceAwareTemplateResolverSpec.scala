@@ -16,7 +16,7 @@ class DeviceAwareTemplateResolverSpec extends FunSpec with Matchers {
 
   describe("DeviceAwareTemplateResolver") {
     it("should resolve template when it ends with -x in a request from desktop ") {
-      val desktopRequest = FakeRequest("GET", "/", FakeHeaders(Seq("User-Agent" -> Seq(aDesktopUserAgent))), AnyContentAsEmpty)
+      val desktopRequest = FakeRequest("GET", "/", FakeHeaders(Seq("User-Agent" -> aDesktopUserAgent)), AnyContentAsEmpty)
 
       val resultHtml = resolver.resolve(desktopRequest, "/path/to/template1-x.html")
       val resultHtml0 = resolver.resolve0(desktopRequest, "/path/to/template1-x.html")
@@ -36,7 +36,7 @@ class DeviceAwareTemplateResolverSpec extends FunSpec with Matchers {
     }
 
     it("should resolve template when it ends with -x in a request from mobile ") {
-      val mobileRequest = FakeRequest("GET", "/", FakeHeaders(Seq("User-Agent" -> Seq(aMobileUserAgent))), AnyContentAsEmpty)
+      val mobileRequest = FakeRequest("GET", "/", FakeHeaders(Seq("User-Agent" -> aMobileUserAgent)), AnyContentAsEmpty)
 
       val resultHtml = resolver.resolve(mobileRequest, "/path/to/template1-x.html")
       val resultHtml0 = resolver.resolve0(mobileRequest, "/path/to/template1-x.html")

@@ -2,11 +2,15 @@ package jp.co.bizreach.play2nashorn
 
 
 import java.io._
+import javax.inject.{Inject, Provider}
 import javax.script.{ScriptEngineManager, ScriptContext, SimpleScriptContext, ScriptEngine}
 
 import com.typesafe.config.ConfigRenderOptions
 import play.api._
+import play.api.inject.{ApplicationLifecycle, Binding, Module}
 
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.io.Source
 
 case class RouteConfig(
@@ -17,10 +21,27 @@ case class RouteConfig(
   configParams: Option[String])
 
 
+class NashornModule extends Module {
+  def bindings(environment: Environment, configuration: Configuration): Seq[Binding[NashornPlugin]] =
+    Seq(
+      bind[NashornPlugin].toProvider[NashornProvider].eagerly()
+    )
+}
 
-class NashornPlugin(app: Application) extends Plugin {
+
+@javax.inject.Singleton
+class NashornProvider @Inject() (app: Application, lifecycle: ApplicationLifecycle) extends Provider[NashornPlugin] {
+
+  lazy val get: NashornPlugin = new NashornPlugin(app, lifecycle)
+
+}
+
+
+class NashornPlugin(app: Application, lifecycle: ApplicationLifecycle) {
 
   private val root = "play2nashorn"
+
+  private lazy val logger = Logger(this.getClass)
 
 
   lazy val nashorn = new NashornConfig {
@@ -32,7 +53,7 @@ class NashornPlugin(app: Application) extends Plugin {
     //    val engine = new NashornScriptEngineFactory().getScriptEngine
 
     val basePath = configString(s"$root.basePath", "/public")
-    val readClassPath = configBoolean(s"$root.readClassPath", Play.isProd(Play.current))
+    val readClassPath = configBoolean(s"$root.readClassPath", Play.isProd(app))
 
     val renderers = configStringSeq(app.configuration, s"$root.renderers")
     val commons = configStringSeq(app.configuration, s"$root.commons")
@@ -41,10 +62,10 @@ class NashornPlugin(app: Application) extends Plugin {
       .map(_.map(loadClass[TemplateResolver])).getOrElse(Seq(new DeviceAwareTemplateResolver))
   }
 
+  onStart()
 
-  override def onStart(): Unit = {
-    super.onStart()
-    Logger.info("Initialize Nashorn plugin ...")
+  def onStart():Unit = {
+    logger.info("Initialize Nashorn plugin ...")
     try {
       nashorn.touch()
 
@@ -55,7 +76,7 @@ class NashornPlugin(app: Application) extends Plugin {
       Logger.debug(s"play2-nashorn: routes: ${nashorn.routes}")
 
     } catch {
-      case ex:NoClassDefFoundError =>
+      case ex: NoClassDefFoundError =>
         if (ex.getMessage.contains("NashornScriptEngineFactory")) {
           Logger.error("NashornScriptEngineFactory was not found.")
           Logger.error("The server needs JDK 8, but it's working on:")
@@ -64,14 +85,19 @@ class NashornPlugin(app: Application) extends Plugin {
         }
         throw ex
     }
-    Logger.info("Nashorn initialization has completed.")
+
+    // This is a quick solution to inject Nashorn config into renderers.
+    Mustache.injectConfig(nashorn)
+    Dust.injectConfig(nashorn)
+    React.injectConfig(nashorn)
+
+    logger.info("Nashorn initialization has completed.")
   }
 
 
-  override def onStop(): Unit = {
-    Logger.info("play2-nashorn is shutting down, Bye !")
-    super.onStop()
-  }
+  lifecycle.addStopHook { () => Future {
+    logger.info("play2-nashorn is shutting down, Bye !")
+  }}
 
 
   protected def initRouteConfig(path: String):Map[String, RouteConfig] = {

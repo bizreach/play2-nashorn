@@ -3,9 +3,9 @@ name := "play2-nashorn"
 
 organization := "jp.co.bizreach"
 
-version := "0.1.0"
+version := "0.2.0"
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 // The minimum compiler version is 1.8 since it requires Nashorn
 javacOptions ++= Seq("-source", "1.8")
@@ -16,14 +16,14 @@ resolvers ++= Seq(
 )
 
 libraryDependencies ++= Seq(
-  "com.typesafe.play"           %% "play"                   % "2.3.8"     % "provided",
+  "com.typesafe.play"           %% "play"                   % "2.4.2"     % "provided",
   "com.netaporter"              %% "scala-uri"              % "0.4.6",
   "org.json4s"                  %% "json4s-core"            % "3.2.11",
   "org.json4s"                  %% "json4s-jackson"         % "3.2.11",
   "com.typesafe.scala-logging"  %% "scala-logging"          % "3.1.0",
   "ch.qos.logback"               % "logback-classic"        % "1.1.2",
   "org.scalatest"               %% "scalatest"              % "2.2.4"     % "test",
-  "com.typesafe.play"           %% "play-test"              % "2.3.8"     % "test",
+  "com.typesafe.play"           %% "play-test"              % "2.4.2"     % "test",
   "org.mockito"                  % "mockito-all"            % "1.10.19"   % "test"
 )
 

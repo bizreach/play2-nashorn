@@ -6,14 +6,13 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala).settings(
   unmanagedResourceDirectories in Compile += baseDirectory.value / "resources"
 )
 
-scalaVersion := "2.11.6"
+scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
   jdbc,
-  anorm,
   cache,
   ws,
- "jp.co.bizreach"               %% "play2-nashorn"      % "0.1-SNAPSHOT"
+ "jp.co.bizreach"               %% "play2-nashorn"      % "0.2.0"
 )
 
 // ???

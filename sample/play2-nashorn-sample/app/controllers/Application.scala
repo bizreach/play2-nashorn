@@ -8,10 +8,10 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 
-object Application extends Controller {
+class Application extends Controller {
 
   def index = Action {
-    Ok(views.html.index("Your new application is ready."))
+    Ok(views.html.index("Your new application is ready with play2-nashorn."))
   }
 
 
@@ -20,8 +20,7 @@ object Application extends Controller {
    */
   def mustache1 = Action.async { implicit req =>
 
-//    Mustache("mustache-1").map{html => Ok(new Html(html))}
-    Mustache("mustache-1").map{html => Ok(HtmlFormat.raw(html))}
+    Mustache("mustache-1").map{html => Ok(HtmlFormat.raw(html.toString()))}
   }
 
 
@@ -36,7 +35,7 @@ object Application extends Controller {
       "root" -> "house",
       "parts" -> Json.obj("part1" -> "door", "part2" -> "window"))
 
-    val result: Future[String] = Mustache("mustache-2", json.toString())
+    val result: Future[String] = Mustache("mustache-2", json.toString()).map(_.toString())
 
     result.map{ html => Ok(HtmlFormat.raw(html)) }
   }
@@ -46,6 +45,6 @@ object Application extends Controller {
    * Prepare 2 templates for Desktop and mobile
    */
   def mustache3 = Action.async { implicit req =>
-    Mustache("mustache-3").map{ html => Ok(HtmlFormat.raw(html)) }
+    Mustache("mustache-3").map{ html => Ok(HtmlFormat.raw(html.toString())) }
   }
 }

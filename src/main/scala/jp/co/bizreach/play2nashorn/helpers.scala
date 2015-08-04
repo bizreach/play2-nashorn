@@ -47,5 +47,5 @@ class DeviceAwareTemplateResolver extends TemplateResolver {
     request
       .headers
       .getAll("User-Agent")
-      .exists(ua => ua.contains("Mobi") && ! ua.contains("iPad"))
+      .exists(ua => (ua.contains("Stanby") || (ua.contains("Mobi") && !ua.contains("iPad"))))
 }

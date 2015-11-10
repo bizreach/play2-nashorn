@@ -19,41 +19,27 @@ class DeviceAwareTemplateResolverSpec extends FunSpec with Matchers {
       val desktopRequest = FakeRequest("GET", "/", FakeHeaders(Seq("User-Agent" -> aDesktopUserAgent)), AnyContentAsEmpty)
 
       val resultHtml = resolver.resolve(desktopRequest, "/path/to/template1-x.html")
-      val resultHtml0 = resolver.resolve0(desktopRequest, "/path/to/template1-x.html")
       assert(resultHtml === "/path/to/template1.html")
-      assert(resultHtml0 === "/path/to/template1.html")
 
       val resultHtm = resolver.resolve(desktopRequest, "/path/to/template1-x.htm")
-      val resultHtm0 = resolver.resolve0(desktopRequest, "/path/to/template1-x.htm")
       assert(resultHtm === "/path/to/template1.htm")
-      assert(resultHtm0 === "/path/to/template1.htm")
-
 
       val resultJs = resolver.resolve(desktopRequest, "/path/to/template1-x.js")
-      val resultJs0 = resolver.resolve0(desktopRequest, "/path/to/template1-x.js")
       assert(resultJs === "/path/to/template1-x.js")
-      assert(resultJs0 === "/path/to/template1-x.js")
     }
 
     it("should resolve template when it ends with -x in a request from mobile ") {
       val mobileRequest = FakeRequest("GET", "/", FakeHeaders(Seq("User-Agent" -> aMobileUserAgent)), AnyContentAsEmpty)
 
       val resultHtml = resolver.resolve(mobileRequest, "/path/to/template1-x.html")
-      val resultHtml0 = resolver.resolve0(mobileRequest, "/path/to/template1-x.html")
       assert(resultHtml === "/path/to/template1-m.html")
-      assert(resultHtml0 === "/path/to/template1-m.html")
 
       val resultHtm = resolver.resolve(mobileRequest, "/path/to/template1-x.htm")
-      val resultHtm0 = resolver.resolve0(mobileRequest, "/path/to/template1-x.htm")
       assert(resultHtm === "/path/to/template1-m.htm")
-      assert(resultHtm0 === "/path/to/template1-m.htm")
 
 
       val resultJs = resolver.resolve(mobileRequest, "/path/to/template1-x.js")
-      val resultJs0 = resolver.resolve0(mobileRequest, "/path/to/template1-x.js")
       assert(resultJs === "/path/to/template1-x.js")
-      assert(resultJs0 === "/path/to/template1-x.js")
-
     }
   }
 }

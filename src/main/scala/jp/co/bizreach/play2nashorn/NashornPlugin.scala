@@ -59,7 +59,7 @@ class NashornPlugin(app: Application, lifecycle: ApplicationLifecycle) {
     val commons = configStringSeq(app.configuration, s"$root.commons")
     val routes = initRouteConfig(s"$root.routes")
     val templateResolvers = configStringSeq(s"$root.templateResolvers")
-      .map(_.map(loadClass[TemplateResolver])).getOrElse(Seq(new DeviceAwareTemplateResolver))
+      .map(_.map(loadClass[TemplateResolver])).getOrElse(Seq.empty)
   }
 
   onStart()
